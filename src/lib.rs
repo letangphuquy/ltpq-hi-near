@@ -1,31 +1,37 @@
 #![allow(dead_code)]
 use near_sdk::borsh::{self, BorshDeserialize, BorshSerialize};
-use near_sdk::near_bindgen;
-
+use near_sdk::serde::{Serialize, Deserialize};
+use near_sdk::{near_bindgen, AccountId, Balance, Timestamp, env};
+//Not LeetCode :)
 // Define the contract structure
 #[near_bindgen]
 #[derive(BorshDeserialize, BorshSerialize)]
 pub struct Contract {
-  message: String,
+  pub owner: AccountId,
+  pub problems_count: u32
 }
 
-// Define the default, which automatically initializes the contract
-impl Default for Contract {
-  fn default() -> Self {
-    Self { message: "Hello, ltpq-hi-near".to_string() }
-  }
+#[derive(BorshDeserialize, BorshSerialize, Serialize)]
+#[serde (crate = "near_sdk::serde")]
+pub struct Exercise {
+  pub problem_id: String,
+  pub content: String, //markdown file
+  pub solution_cost: Balance, //(premium) value for one problem is based on various factors, like difficulty, practicability, ... and is determined by admin. 
+  //captivation for contributors like problem author, testcase setter, ... ?
+  pub creation_time: Timestamp
 }
 
-// Implement the contract structure
 #[near_bindgen]
 impl Contract {
-  // get the message
-  pub fn get_message(&self) -> String {
-    self.message.clone()
+  #[init]
+  pub fn init() -> Self {
+    //call-self
+    Self { owner: env::signer_account_id(), problems_count: 0 }
   }
 
-  // Call this method to change the message b
-  pub fn set_message(&mut self, message: u32) {
-    self.message = message.to_string();
+  pub fn create_exercise(problem_id: String, content: String) -> Exercise {
+    Exercise { problem_id, content, solution_cost: 1, creation_time: env::block_timestamp_ms() }
   }
 }
+ 
+
